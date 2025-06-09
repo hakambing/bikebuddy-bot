@@ -126,14 +126,54 @@ def cancel(update: Update, context: CallbackContext):
     update.message.reply_text("🚫 Cancelled.")
     return ConversationHandler.END
 
+def viewlast_command(update: Update, context: CallbackContext):
+    keyboard = [
+        [InlineKeyboardButton("Engine Oil", callback_data="viewlast_Engine Oil"), InlineKeyboardButton("Air Filter", callback_data="viewlast_Air Filter")],
+        [InlineKeyboardButton("Spark Plug", callback_data="viewlast_Spark Plug"), InlineKeyboardButton("Brake Pad", callback_data="viewlast_Brake Pad")],
+        [InlineKeyboardButton("Coolant Flush", callback_data="viewlast_Coolant Flush"), InlineKeyboardButton("Brake Flush", callback_data="viewlast_Brake Flush")],
+        [InlineKeyboardButton("Tyre Change", callback_data="viewlast_Tyre Change")],
+        [InlineKeyboardButton("Latest Entry", callback_data="viewlast_latest")]
+    ]
+    update.message.reply_text("🔍 What maintenance type do you want to view?", reply_markup=InlineKeyboardMarkup(keyboard))
+
+def viewlast_handler(update: Update, context: CallbackContext):
+    query = update.callback_query
+    query.answer()
+    selection = query.data.replace("viewlast_", "")
+    records = sheet.get_all_records()
+
+    if selection.lower() == "latest":
+        if records:
+            row = records[-1]
+        else:
+            query.message.reply_text("❌ No maintenance records found.")
+            return
+    else:
+        for row in reversed(records):
+            if row["Maintenance Type"].strip().lower() == selection.lower():
+                break
+        else:
+            query.message.reply_text(f"❌ No records found for '{selection}'.")
+            return
+
+    msg = (
+        f"📅 *Date:* {row['Date']}\n"
+        f"🔧 *Type:* {row['Maintenance Type']}\n"
+        f"💵 *Price:* {row['Price']}\n"
+        f"📍 *Location:* {row['Location']}\n"
+        f"📝 *Remarks:* {row['Remarks']}\n"
+        f"📈 *Mileage:* {row['Total Mileage']}"
+    )
+    query.message.reply_text(msg, parse_mode="Markdown")
+
 # === MAIN ===
 updater = Updater(TELEGRAM_TOKEN, use_context=True)
 dp = updater.dispatcher
 
-# /log (quick)
 dp.add_handler(CommandHandler("log", log_maintenance))
+dp.add_handler(CommandHandler("viewlast", viewlast_command))
+dp.add_handler(CallbackQueryHandler(viewlast_handler, pattern="^viewlast_"))
 
-# /logstep (guided)
 conv_handler = ConversationHandler(
     entry_points=[CommandHandler('logstep', start_logstep)],
     states={
