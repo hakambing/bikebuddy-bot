@@ -2,6 +2,8 @@ import keep_alive
 keep_alive.keep_alive()
 
 import gspread
+import json
+import os
 from oauth2client.service_account import ServiceAccountCredentials
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import (
@@ -16,12 +18,13 @@ logging.basicConfig(level=logging.INFO)
 
 # Google Sheets setup
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("bikebuddybot-c360f7478b23.json", scope)
+creds_json = json.loads(os.getenv("GOOGLE_CREDENTIALS_JSON"))
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_json, scope)
 client = gspread.authorize(creds)
 sheet = client.open("Motorcycle Maintenance Log").sheet1
 
-# Telegram token
-TELEGRAM_TOKEN = '7386155893:AAFayoxRDO-AIUqy-U_lqxvOONLgtmAequQ'
+# Telegram token from environment
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 
 # Step-by-step states
 DATE, MAINT_TYPE, PRICE, LOCATION, REMARKS, MILEAGE = range(6)
@@ -153,4 +156,3 @@ conv_handler = ConversationHandler(
 
 dp.add_handler(conv_handler)
 updater.start_polling()
-
