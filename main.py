@@ -305,7 +305,8 @@ def delete_confirmation_handler(update: Update, context: CallbackContext):
 # === /export ===
 def export_data(update: Update, context: CallbackContext):
     try:
-        res = httpx.get(f"{SUPABASE_URL}/rest/v1/{TABLE}?select=*&order=date.desc", headers=HEADERS)
+        # Sort by date ascending (earliest first), then by ID ascending for consistent ordering
+        res = httpx.get(f"{SUPABASE_URL}/rest/v1/{TABLE}?select=*&order=date.asc,id.asc", headers=HEADERS)
         if not res.is_success:
             update.message.reply_text("❌ Failed to fetch data.")
             return
@@ -336,7 +337,7 @@ def export_data(update: Update, context: CallbackContext):
         
         # Send as document
         csv_file = InputFile(StringIO(csv_content), filename="maintenance_records.csv")
-        update.message.reply_document(csv_file, caption="📊 Your maintenance records")
+        update.message.reply_document(csv_file, caption="📊 Your maintenance records (earliest to latest)")
         
     except Exception as e:
         logging.error(f"Export error: {e}")
