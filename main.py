@@ -24,7 +24,7 @@ HEADERS = {
     "Authorization": f"Bearer {SUPABASE_KEY}",
     "Content-Type": "application/json"
 }
-TABLE = "caleb_motorcycle_maintenance"
+TABLE = "hakam_motorcycle_maintenance"
 
 # Telegram token
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
